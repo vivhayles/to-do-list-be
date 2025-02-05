@@ -53,13 +53,13 @@ class TaskAPIController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'completed' => 'required|boolean',
-            'category_id'=> 'required|integer'
+            'category_id'=> 'integer'
         ]);
 
         $task = new Task();
         $task->name = $request->input('name');
         $task->completed = $request->input('completed');
-
+        $task->category_id = 0;
         $task->save();
         return response()->json([
             'message' => 'Task created successfully.',
@@ -75,12 +75,23 @@ class TaskAPIController extends Controller
             'success' => true,
         ]);
     }
-    public function update (Request $request, int $id)
+    public function update(Request $request, int $id)
     {
         $task = Task::find($id);
-        $task->name = $request->name;
-        $task->completed = $request->completed;
-        $task->category_id = $request->category_id;
+
+        if (!$task) {
+            return response()->json([
+                'message' => 'Task not found.',
+                'success' => false
+            ], 404);
+        }
+        //The null coalescing operator (??) in PHP is used to provide a default value if a variable is null.
+        //Without it, if a field is not included in the request, it gets overwritten with null.
+        //If the request includes a value, it updates that field.
+        //If the request doesn't include a field, it keeps the old value instead of setting it to null.
+        $task->name = $request->name ?? $task->name;
+        $task->completed = $request->completed ?? $task->completed;
+        $task->category_id = $request->category_id ?? $task->category_id;
 
         $task->save();
 
